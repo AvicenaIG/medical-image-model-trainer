@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "medical-image-model-trainer"
+version = "0.1.0"
+description = "Train medical imaging AI models locally or in the cloud with any framework"
+authors = ["AvicenaIG <avi.cena.ghifarie@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+medical-image-model-trainer = "^0.5.3"
+medical-image-model-trainer = "^3.9"
+medical-image-model-trainer = "^2.0.0"
+medical-image-model-trainer = "^1.20.1"
+medical-image-model-trainer = "^4.66.2"
+
+[build-system]
+requires = ["poetry-core"]
+medical-image-model-trainer = "poetry.core.masonry.api"

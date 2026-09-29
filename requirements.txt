@@ -1,0 +1,3 @@
+antspynet
+google-cloud-storage
+google-auth
