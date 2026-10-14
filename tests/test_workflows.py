@@ -14,33 +14,110 @@ from medical-image-model-trainer.readers import ImageReader
 from medical-image-model-trainer.samplers import SliceSampler
 
 class TestClass_OneInput_OneOutput(unittest.TestCase):
-    pass  # TODO: implement
     def setUp(self):
-        pass  # TODO: implement
+        pass
 
     def tearDown(self):
-        pass  # TODO: implement
+        pass
+    
     def test_binary_segmentation(self):
-        pass  # TODO: implement
+        base_dir = nt.fetch_data('example-01')
 
+        dataset = nt.Dataset(inputs=ImageReader('*/img3d.nii.gz'),
+                            outputs=ImageReader('*/img3d_seg.nii.gz'),
+                            transforms={
+                                    ('inputs','outputs'): tx.Resample((40,40,40))
+                            },
+                            base_dir=base_dir)
 
+        x,y = dataset[0]
 
+        data_train, data_test = dataset.split(0.8)
 
+        loader = nt.Loader(data_train,
+                        images_per_batch=4,
+                        shuffle=True,
+                        sampler=SliceSampler(batch_size=20, axis=-1))
 
+        arch_fn = nt.fetch_architecture('unet', dim=2)
+        model = arch_fn(x.shape[:-1]+(1,),
+                        number_of_outputs=1,
+                        number_of_layers=4,
+                        number_of_filters_at_base_layer=16,
+                        mode='sigmoid')
 
+        # train
+        trainer = nt.Trainer(model, task='segmentation')
+        trainer.fit(loader, epochs=2)
+        
+        # evaluate on test data
+        test_loader = loader.copy(data_test)
+        trainer.evaluate(test_loader)
+        
+        # inference on test data
+        predictor = nt.Predictor(model, 
+                                 task='segmentation',
+                                 sampler=SliceSampler(axis=-1))
+        y_pred = predictor.predict(data_test)
+    
     def test_multiclass_segmentation(self):
-        pass  # TODO: implement
+        import ants
+        import medical-image-model-trainer as nt
+        from medical-image-model-trainer import transforms as tx
+        from medical-image-model-trainer.readers import ImageReader
+        from medical-image-model-trainer.samplers import SliceSampler
+        base_dir = nt.fetch_data('example-01')
 
+        dataset = nt.Dataset(inputs=ImageReader('*/img3d.nii.gz'),
+                            outputs=ImageReader('*/img3d_multiseg.nii.gz'),
+                            transforms={
+                                    ('inputs','outputs'): tx.Resample((40,40,40)),
+                                    'outputs': tx.LabelsToChannels()
+                            },
+                            base_dir=base_dir)
 
+        x,y = dataset[0]
+        
+        data_train, data_test = dataset.split(0.8)
 
+        loader = nt.Loader(data_train,
+                           sampler=SliceSampler(batch_size=20, axis=-1),
+                           images_per_batch=4)
+        
+        xb, yb = next(iter(loader))
 
+        arch_fn = nt.fetch_architecture('unet', dim=2)
+        model = arch_fn(x.shape[:-1]+(1,),
+                        number_of_outputs=2,
+                        number_of_layers=4,
+                        number_of_filters_at_base_layer=16,
+                        mode='classification')
 
+        ## train
+        trainer = nt.Trainer(model, task='segmentation')
+        trainer.fit(loader, epochs=2)
+        
+        # evaluate on test data
+        test_loader = loader.copy(data_test)
+        trainer.evaluate(test_loader)
+        
+        # inference on test data
+        predictor = nt.Predictor(model, 
+                                 task='segmentation',
+                                 sampler=SliceSampler(axis=-1))
+        y_pred = predictor.predict(data_test)
+    
     def test_image_regression(self):
-        pass  # TODO: implement
+        pass
+    
     def test_scalar_regression(self):
-        pass  # TODO: implement
+        pass
+    
     def test_binary_scalar_classification(self):
-        pass  # TODO: implement
+        pass
+    
     def test_multiclass_scalar_classification(self):
-        pass  # TODO: implement
+        pass
+        
 if __name__ == '__main__':
+    run_tests()

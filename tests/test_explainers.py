@@ -14,17 +14,52 @@ from medical-image-model-trainer.readers import ImageReader
 from medical-image-model-trainer.samplers import SliceSampler
 
 class TestClass_OcclusionExplainer(unittest.TestCase):
-    pass  # TODO: implement
     def setUp(self):
-        pass  # TODO: implement
+        pass
 
     def tearDown(self):
-        pass  # TODO: implement
+        pass
+    
     def test_image_to_image_segmentation(self):
-        pass  # TODO: implement
+        base_dir = nt.fetch_data('example-01')
 
+        dataset = nt.Dataset(inputs=ImageReader('*/img3d.nii.gz'),
+                            outputs=ImageReader('*/img3d_seg.nii.gz'),
+                            transforms={
+                                    ('inputs','outputs'): tx.Resample((40,40,40))
+                            },
+                            base_dir=base_dir)
+        
+        arch_fn = nt.fetch_architecture('unet', dim=2)
+        model = arch_fn((40,40,1),
+                        number_of_outputs=1,
+                        number_of_layers=4,
+                        number_of_filters_at_base_layer=16,
+                        mode='sigmoid')
+        
+        explainer = nt.OcclusionExplainer(model)
+        res = explainer.fit(dataset)
+        
     def test_image_to_image_regression(self):
-        pass  # TODO: implement
+        base_dir = nt.fetch_data('example-01')
 
+        dataset = nt.Dataset(inputs=ImageReader('*/img3d.nii.gz'),
+                            outputs=ImageReader('*/img3d_100.nii.gz'),
+                            transforms={
+                                    ('inputs','outputs'): tx.Resample((40,40,40))
+                            },
+                            base_dir=base_dir)
 
+        arch_fn = nt.fetch_architecture('unet', dim=2)
+        model = arch_fn((40,40,1),
+                        number_of_outputs=1,
+                        number_of_layers=4,
+                        number_of_filters_at_base_layer=16,
+                        mode='regression')
+        
+        explainer = nt.OcclusionExplainer(model)
+        res = explainer.fit(dataset)
+        
+        
 if __name__ == '__main__':
+    run_tests()

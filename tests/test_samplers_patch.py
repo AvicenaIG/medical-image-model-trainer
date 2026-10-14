@@ -21,17 +21,44 @@ from medical-image-model-trainer import samplers, transforms as tx
 from medical-image-model-trainer.samplers.slice import create_slices
 
 class TestClass_BaseSampler(unittest.TestCase):
-    pass  # TODO: implement
     def setUp(self):
-        pass  # TODO: implement
+        pass
 
     def tearDown(self):
-        pass  # TODO: implement
+        pass
+    
     def test_patch_sampler_image_to_image(self):
-        pass  # TODO: implement
+        import ants
+        import numpy as np
+        import medical-image-model-trainer as nt
+        from medical-image-model-trainer import readers, transforms as tx, samplers
+        imgs = [ants.from_numpy(np.random.randn(128,128)+i) for i in range(10)]
+        segs = [ants.from_numpy(np.random.randn(128,128)+i).clone('unsigned int') for i in range(10)]
 
+        # create dataset
+        dataset = nt.Dataset(readers.MemoryReader(imgs),
+                             readers.MemoryReader(segs),
+                             transforms={
+                                ('inputs', 'outputs'): tx.RandomRotate(-90, 90, p=0.1)
+                             })
 
+        ## optional: read an example record
+        x, y = dataset[0]
 
+        # strided patches
+        loader = nt.Loader(dataset,
+                        images_per_batch=4,
+                        sampler=samplers.PatchSampler(patch_size=(96,96),
+                                                        stride=(2,2),
+                                                        batch_size=4),
+                        transforms={
+                            ('inputs', 'outputs'): tx.RandomRotate(-90, 90, p=0.5)
+                        })
 
+        xb, yb = next(iter(loader))
 
+        self.assertEqual(xb.shape, (4,96,96,1))
+        self.assertEqual(yb.shape, (4,96,96,1))
+        
 if __name__ == '__main__':
+    run_tests()
